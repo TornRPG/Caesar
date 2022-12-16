@@ -2,11 +2,9 @@ package de.mctorn.caesar
 
 import de.mctorn.caesar.annotations.BlockingCall
 import java.net.ServerSocket
-import kotlinx.coroutines.*
 import java.io.Closeable
 import java.io.DataInputStream
 import java.io.DataOutputStream
-import java.io.IOException
 import java.net.Socket
 import java.net.SocketException
 
@@ -14,7 +12,7 @@ class CaesarServer(ip: String, port: Int) : CaesarMessenger(ip, port), Closeable
     private val serverSocket = ServerSocket(port)
 
     @BlockingCall
-    fun waitForMessage(block: (ArrayList<String>) -> Unit) {
+    fun waitForMessage(block: (ArrayList<String>) -> String?) {
         while (true) {
             val clientSocket = try {
                 serverSocket.accept()
@@ -28,7 +26,9 @@ class CaesarServer(ip: String, port: Int) : CaesarMessenger(ip, port), Closeable
 
             Thread {
                 val msg = acceptMessage(clientSocket)
-                block(msg)
+                val ret = block(msg)
+                if (ret != null)
+                    DataOutputStream(clientSocket.getOutputStream()).writeUTF(ret)
                 clientSocket.close()
             }.start()
         }
@@ -46,7 +46,7 @@ class CaesarServer(ip: String, port: Int) : CaesarMessenger(ip, port), Closeable
         return data
     }
 
-    fun start(block: (ArrayList<String>) -> Unit) {
+    fun start(block: (ArrayList<String>) -> String?) {
         Thread {
             waitForMessage(block)
         }.start()
