@@ -1,28 +1,19 @@
 package de.mctorn.caesar
 
-import de.mctorn.caesar.annotations.BlockingCall
-import java.io.DataInputStream
 import java.io.DataOutputStream
+import java.net.InetSocketAddress
 import java.net.Socket
 
 class CaesarClient(ip: String, port: Int) : CaesarMessenger(ip, port) {
-    val clientSocket = Socket(ip, port)
+    private var clientSocket: Socket? = null
 
-    @BlockingCall
-    fun connect(block: (DataInputStream, DataOutputStream) -> Boolean) {
-        // Set up input and output streams for communication
-        val input = DataInputStream(clientSocket.getInputStream())
-        val output = DataOutputStream(clientSocket.getOutputStream())
-
-        // Communicate with server
-        while (true) {
-            if (!block(input, output))
-                break
-        }
-
-        // Clean up
-        input.close()
-        output.close()
-        clientSocket.close()
+    fun sendMessage(vararg str: String) {
+        clientSocket = Socket()
+        clientSocket!!.connect(InetSocketAddress(ip, port), 2000)
+        val output = DataOutputStream(clientSocket!!.getOutputStream())
+        str.forEach(output::writeUTF)
+        output.writeUTF("__CaesarMessageEnd")
+        clientSocket!!.close()
+        clientSocket = null
     }
 }
