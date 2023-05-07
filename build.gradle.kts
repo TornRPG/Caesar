@@ -21,6 +21,11 @@ tasks.test {
     useJUnitPlatform()
 }
 
+tasks.wrapper {
+    gradleVersion = "8.0.2"
+    distributionType = Wrapper.DistributionType.BIN
+}
+
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "17"
 }
